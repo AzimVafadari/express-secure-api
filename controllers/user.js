@@ -1,17 +1,31 @@
-const users = require('../models/user');
+const { validationResult } = require('express-validator');
+const asyncHandler = require('../utils/asyncHandler');
+// فرض بر این است که مدل User را داری، اگر نداری یک آرایه فرضی استفاده می‌کنیم
+const users = []; 
 
-// دریافت همه کاربران
-exports.getAllUsers = (req, res) => {
-    res.status(200).json({ success: true, data: users });
-};
+exports.getUsers = asyncHandler(async (req, res) => {
+    // شبیه‌سازی عملیات دیتابیس
+    res.status(200).json(users);
+});
 
-// ایجاد کاربر جدید
-exports.createUser = (req, res) => {
-    const newUser = {
-        id: users.length + 1,
-        name: req.body.name,
-        email: req.body.email
-    };
+exports.createUser = asyncHandler(async (req, res) => {
+    // ۱. بررسی نتیجه اعتبارسنجی
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            success: false,
+            error: {
+                message: "Validation failed",
+                status: 400,
+                details: errors.array()
+            }
+        });
+    }
+
+    // ۲. ایجاد کاربر
+    const { name, age } = req.body;
+    const newUser = { id: Date.now(), name, age };
     users.push(newUser);
-    res.status(201).json({ success: true, data: newUser });
-};
+
+    res.status(201).json(newUser);
+});
